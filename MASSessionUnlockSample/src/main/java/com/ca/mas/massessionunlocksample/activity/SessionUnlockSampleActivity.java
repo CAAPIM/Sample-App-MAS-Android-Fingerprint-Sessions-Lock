@@ -25,6 +25,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -47,7 +48,6 @@ import java.util.List;
 
 public class SessionUnlockSampleActivity extends AppCompatActivity {
     private final String TAG = SessionUnlockSampleActivity.class.getSimpleName();
-    private Context mContext;
     private RelativeLayout mContainer;
     private Button mLoginButton;
     private Button mInvokeButton;
@@ -57,6 +57,7 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
     private TextInputEditText mPasswordEditText;
     private Switch mLockSwitch;
     private TextView mProtectedContent;
+    private ProgressBar mProgressBar;
     private int REQUEST_CODE = 0x1000;
 
     @Override
@@ -73,7 +74,6 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
 
-        mContext = this;
         mContainer = findViewById(R.id.container);
         mUsernameEditText = findViewById(R.id.edit_text_username);
         mUsernameInputLayout = findViewById(R.id.text_input_layout_username);
@@ -83,6 +83,8 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
         mLockSwitch = findViewById(R.id.checkbox_lock);
         mProtectedContent = findViewById(R.id.data_text_view);
         mInvokeButton = findViewById(R.id.invoke_button);
+        mProgressBar = findViewById(R.id.progressBar);
+
 
         mLoginButton.setOnClickListener(getLoginListener());
         mInvokeButton.setOnClickListener(getInvokeListener());
@@ -91,10 +93,37 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
         MAS.start(this, true);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                MASUser.getCurrentUser().unlockSession(getUnlockCallback(this));
+            } else if (resultCode == RESULT_CANCELED) {
+                mLockSwitch.setChecked(true);
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (MASUser.getCurrentUser() == null) {
+            onLogout();
+        } else {
+            onLogin();
+            if (MASUser.getCurrentUser().isSessionLocked()) {
+                mLockSwitch.setChecked(true);
+            }
+        }
+    }
     private View.OnClickListener getLoginListener() {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mProgressBar.setVisibility(View.VISIBLE);
+
                 String username = mUsernameEditText.getEditableText().toString();
                 String password = mPasswordEditText.getEditableText().toString();
 
@@ -107,6 +136,8 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mProgressBar.setVisibility(View.VISIBLE);
+
                 MASUser currentUser = MASUser.getCurrentUser();
                 currentUser.logout(getLogoutCallback());
             }
@@ -117,16 +148,29 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                invokeApi();
+                mProgressBar.setVisibility(View.VISIBLE);
+
+                String path = "/protected/resource/products";
+                Uri.Builder uriBuilder = new Uri.Builder().encodedPath(path);
+                uriBuilder.appendQueryParameter("operation", "listProducts");
+                uriBuilder.appendQueryParameter("pName2", "pValue2");
+
+                MASRequest.MASRequestBuilder requestBuilder = new MASRequest.MASRequestBuilder(uriBuilder.build());
+                requestBuilder.header("hName1", "hValue1");
+                requestBuilder.header("hName2", "hValue2");
+                MASRequest request = requestBuilder.get().build();
+
+                MAS.invoke(request, getInvokeCallback());
             }
         };
     }
 
     private Switch.OnCheckedChangeListener getLockListener(final SessionUnlockSampleActivity activity) {
         return new Switch.OnCheckedChangeListener() {
-
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mProgressBar.setVisibility(View.VISIBLE);
+
                 if (isChecked) {
                     MASUser.getCurrentUser().lockSession(getLockCallback());
                 } else {
@@ -134,27 +178,6 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
                 }
             }
         };
-    }
-
-    private void onLogin() {
-        mInvokeButton.setVisibility(View.VISIBLE);
-        mLockSwitch.setVisibility(View.VISIBLE);
-        mLoginButton.setText(R.string.logout_button_text);
-        mLoginButton.setOnClickListener(getLogoutListener());
-
-        mUsernameInputLayout.setVisibility(View.GONE);
-        mPasswordInputLayout.setVisibility(View.GONE);
-    }
-
-    private void onLogout() {
-        mInvokeButton.setVisibility(View.GONE);
-        mLockSwitch.setVisibility(View.GONE);
-        mLoginButton.setText(R.string.login_button_text);
-        mLoginButton.setOnClickListener(getLoginListener());
-        mProtectedContent.setText(R.string.protected_info);
-
-        mUsernameInputLayout.setVisibility(View.VISIBLE);
-        mPasswordInputLayout.setVisibility(View.VISIBLE);
     }
 
     private MASCallback<MASUser> getLoginCallback() {
@@ -167,13 +190,11 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
                         onLogin();
                     }
                 });
-
-                String textToSet = "Logged in as " + user.getDisplayName();
-                mProtectedContent.setText(textToSet);
             }
 
             @Override
             public void onError(Throwable e) {
+                mProgressBar.setVisibility(View.GONE);
                 Snackbar.make(mContainer, e.toString(), Snackbar.LENGTH_LONG).show();
             }
         };
@@ -193,16 +214,40 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
 
             @Override
             public void onError(Throwable e) {
+                mProgressBar.setVisibility(View.GONE);
                 Snackbar.make(mContainer, e.toString(), Snackbar.LENGTH_LONG).show();
             }
         };
     }
 
+    private MASCallback<MASResponse<JSONObject>> getInvokeCallback() {
+        return new MASCallback<MASResponse<JSONObject>>() {
+            @Override
+            public Handler getHandler() {
+                return new Handler(Looper.getMainLooper());
+            }
+
+            @Override
+            public void onSuccess(MASResponse<JSONObject> result) {
+                onInvoke(result);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                mProgressBar.setVisibility(View.GONE);
+                mProtectedContent.setText(R.string.invoke_session_locked);
+                Log.e(TAG, e.getMessage());
+            }
+        };
+    }
+
     private MASCallback<Void> getLockCallback() {
+        mProgressBar.setVisibility(View.GONE);
+
         return new MASCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                Snackbar.make(mContainer, "Session Locked", Snackbar.LENGTH_LONG).show();
+                onLock();
             }
 
             @Override
@@ -223,96 +268,76 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(Void result) {
-                Snackbar.make(mContainer, "Session Unlocked", Snackbar.LENGTH_LONG).show();
-
+                onUnLock();
             }
 
             @Override
             public void onError(Throwable e) {
+                mProgressBar.setVisibility(View.GONE);
                 Snackbar.make(mContainer, e.toString(), Snackbar.LENGTH_LONG).show();
             }
         };
     }
 
-    private void invokeApi() {
-        String path = "/protected/resource/products";
-        Uri.Builder uriBuilder = new Uri.Builder().encodedPath(path);
-        uriBuilder.appendQueryParameter("operation", "listProducts");
-        uriBuilder.appendQueryParameter("pName2", "pValue2");
+    private void onLogin() {
+        mProgressBar.setVisibility(View.GONE);
 
-        MASRequest.MASRequestBuilder requestBuilder = new MASRequest.MASRequestBuilder(uriBuilder.build());
-        requestBuilder.header("hName1", "hValue1");
-        requestBuilder.header("hName2", "hValue2");
-        MASRequest request = requestBuilder.get().build();
+        mInvokeButton.setVisibility(View.VISIBLE);
+        mLockSwitch.setVisibility(View.VISIBLE);
+        mLoginButton.setText(R.string.logout_button_text);
+        mLoginButton.setOnClickListener(getLogoutListener());
 
-        MAS.invoke(request, new MASCallback<MASResponse<JSONObject>>() {
-            @Override
-            public Handler getHandler() {
-                return new Handler(Looper.getMainLooper());
-            }
+        mUsernameInputLayout.setVisibility(View.GONE);
+        mPasswordInputLayout.setVisibility(View.GONE);
 
-            @Override
-            public void onSuccess(MASResponse<JSONObject> result) {
-                try {
-                    List<String> objects = parseProductListJson(result.getBody().getContent());
-                    String objectString = "";
-                    int size = objects.size();
-                    for (int i = 0; i < size; i++) {
-                        objectString += objects.get(i);
-                        if (i != size - 1) {
-                            objectString += "\n";
-                        }
-                    }
+        String textToSet = "Logged in as " + MASUser.getCurrentUser().getDisplayName();
+        mProtectedContent.setText(textToSet);
+    }
 
-                    mProtectedContent.setText(objectString);
-                } catch (JSONException e) {
-                    Log.e(TAG, e.getMessage());
+    private void onLogout() {
+        mProgressBar.setVisibility(View.GONE);
+
+        mInvokeButton.setVisibility(View.GONE);
+        mLockSwitch.setVisibility(View.GONE);
+        mLoginButton.setText(R.string.login_button_text);
+        mLoginButton.setOnClickListener(getLoginListener());
+        mProtectedContent.setText(R.string.protected_info);
+
+        mUsernameInputLayout.setVisibility(View.VISIBLE);
+        mPasswordInputLayout.setVisibility(View.VISIBLE);
+    }
+
+    private void onInvoke(MASResponse<JSONObject> result) {
+        mProgressBar.setVisibility(View.GONE);
+
+        try {
+            List<String> objects = parseProductListJson(result.getBody().getContent());
+            String objectString = "";
+            int size = objects.size();
+            for (int i = 0; i < size; i++) {
+                objectString += objects.get(i);
+                if (i != size - 1) {
+                    objectString += "\n";
                 }
             }
 
-            @Override
-            public void onError(Throwable e) {
-                Log.e(TAG, e.getMessage());
-            }
-        });
-    }
+            mProtectedContent.setText(objectString);
+        } catch (JSONException e) {
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                MASUser.getCurrentUser().unlockSession(getUnlockCallback(this));
-            }
+            Log.e(TAG, e.getMessage());
         }
     }
 
-    @Override
-    protected void onPause() {
-        if (mLockSwitch.isChecked()) {
-            MASUser currentUser = MASUser.getCurrentUser();
-            if (currentUser != null) {
-                currentUser.lockSession(null);
-            }
-        }
-        super.onPause();
+    private void onLock() {
+        mProgressBar.setVisibility(View.GONE);
+        mProtectedContent.setText(R.string.session_locked);
+        Snackbar.make(mContainer, "Session Locked", Snackbar.LENGTH_LONG).show();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        MASUser currentUser = MASUser.getCurrentUser();
-        if (currentUser != null && currentUser.isSessionLocked()) {
-            launchLockActivity();
-        } else
-        if (currentUser != null && currentUser.isAuthenticated()) {
-            onLogin();
-        }
-    }
-
-    private void launchLockActivity() {
-        Intent i = new Intent("MASUI.intent.action.SessionUnlock");
-        startActivityForResult(i, REQUEST_CODE);
+    private void onUnLock() {
+        mProgressBar.setVisibility(View.GONE);
+        mProtectedContent.setText(R.string.session_unlocked);
+        Snackbar.make(mContainer, "Session Unlocked", Snackbar.LENGTH_LONG).show();
     }
 
     private static List<String> parseProductListJson(JSONObject json) throws JSONException {
