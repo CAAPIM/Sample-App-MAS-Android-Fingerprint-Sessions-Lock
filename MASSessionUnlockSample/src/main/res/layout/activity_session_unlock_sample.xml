@@ -97,7 +97,18 @@
                 android:layout_marginLeft="16dp"
                 android:layout_marginRight="16dp"
                 android:text="Login"
-                android:textSize="18sp"/>
+                android:textSize="18sp" />
+
+            <Button
+                android:id="@+id/invoke_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:text="Invoke Protected API"
+                android:textSize="18sp"
+                android:visibility="gone" />
 
             <Switch
                 android:id="@+id/checkbox_lock"

@@ -9,4 +9,6 @@
 <resources>
     <string name="app_name">Session Unlock</string>
     <string name="protected_info">Log in to view protected information.</string>
+    <string name="login_button_text">Log in</string>
+    <string name="logout_button_text">Log out</string>
 </resources>
