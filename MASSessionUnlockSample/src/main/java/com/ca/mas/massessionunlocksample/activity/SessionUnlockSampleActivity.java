@@ -118,16 +118,20 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
             }
         }
     }
+
     private View.OnClickListener getLoginListener() {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mProgressBar.setVisibility(View.VISIBLE);
-
                 String username = mUsernameEditText.getEditableText().toString();
                 String password = mPasswordEditText.getEditableText().toString();
 
-                MASUser.login(username, password.toCharArray(), getLoginCallback());
+                if (username.length() > 0 && password.length() > 0) {
+                    mProgressBar.setVisibility(View.VISIBLE);
+                    MASUser.login(username, password.toCharArray(), getLoginCallback());
+                } else {
+                    Snackbar.make(mContainer, "Invalid Log In Credentials", Snackbar.LENGTH_LONG).show();
+                }
             }
         };
     }
@@ -193,9 +197,14 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(Throwable e) {
-                mProgressBar.setVisibility(View.GONE);
-                Snackbar.make(mContainer, e.toString(), Snackbar.LENGTH_LONG).show();
+            public void onError(final Throwable e) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mProgressBar.setVisibility(View.GONE);
+                        Snackbar.make(mContainer,e.getMessage(),Snackbar.LENGTH_LONG).show();
+                    }
+                });
             }
         };
     }
