@@ -143,7 +143,7 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
                 mProgressBar.setVisibility(View.VISIBLE);
 
                 MASUser currentUser = MASUser.getCurrentUser();
-                currentUser.logout(getLogoutCallback());
+                currentUser.logout(true,getLogoutCallback());
             }
         };
     }
