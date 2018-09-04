@@ -48,24 +48,18 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    compile "com.android.support:appcompat-v7:$project.appCompatVersion"
-    compile 'com.android.support:multidex:1.0.3'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'junit:junit:4.12'
+    implementation "com.android.support:appcompat-v7:$project.appCompatVersion"
+    implementation 'com.android.support:multidex:1.0.3'
 
-
-//    compile project(':mas-foundation')
-//    compile project(':masui')
     //Using JCenter
-    compile 'com.ca:mas:1.7.10'
-    compile 'com.ca:masui:1.7.10'
+    implementation 'com.ca:mas:1.8.00'
+    implementation 'com.ca:masui:1.8.00'
 }
 
 repositories {
     jcenter()
-//    flatDir{
-//        dirs 'libs'
-//    }
     maven { url 'https://maven.fabric.io/public' }
 
     maven {
