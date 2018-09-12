@@ -54,7 +54,7 @@ dependencies {
     implementation 'com.android.support:multidex:1.0.3'
 
     //Using JCenter
-    implementation 'com.ca:mas:1.8.00'
+    implementation 'com.ca:mas-foundation:1.8.00'
     implementation 'com.ca:masui:1.8.00'
 }
 
