@@ -299,7 +299,7 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
         mUsernameInputLayout.setVisibility(View.GONE);
         mPasswordInputLayout.setVisibility(View.GONE);
 
-        String textToSet = "Logged in as " + MASUser.getCurrentUser().getDisplayName();
+        String textToSet = "Logged in as " + MASUser.getCurrentUser().getUserName();
         mProtectedContent.setText(textToSet);
     }
 
