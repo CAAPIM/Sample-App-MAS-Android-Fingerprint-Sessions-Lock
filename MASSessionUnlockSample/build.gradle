@@ -11,7 +11,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.0'
+        classpath 'com.android.tools.build:gradle:3.5.3'
     }
 }
 
@@ -38,6 +38,7 @@ android {
         targetSdkVersion targetSdkVersion
         versionCode 1
         versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
@@ -47,18 +48,29 @@ android {
     }
 }
 
+repositories {
+    mavenCentral()
+    flatDir {
+        dir 'libs'
+    }
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.ca.apim:mas-foundation:2.2.0'
+    implementation 'com.ca.apim:masui:2.2.0'
+    implementation 'androidx.test.uiautomator:uiautomator:2.2.0'
+    implementation 'androidx.test.espresso:espresso-idling-resource:3.4.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
-    //Using JCenter
-    implementation 'com.ca:mas-foundation:2.1.00'
-    implementation 'com.ca:masui:2.1.00'
+
 }
 
 repositories {
     jcenter()
     maven { url 'https://maven.fabric.io/public' }
-
     maven {
         url 'https://dl.bintray.com/caapim/maven'
     }

@@ -14,6 +14,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+
+import com.ca.mas.massessionunlocksample.BuildConfig;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -121,6 +123,9 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (BuildConfig.DEBUG) {
+                    CountingIdlingResourceSingleton.increment();
+                }
                 String username = mUsernameEditText.getEditableText().toString();
                 String password = mPasswordEditText.getEditableText().toString();
 
@@ -138,6 +143,10 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                if (BuildConfig.DEBUG) {
+                    CountingIdlingResourceSingleton.increment();
+                }
                 mProgressBar.setVisibility(View.VISIBLE);
 
                 MASUser currentUser = MASUser.getCurrentUser();
@@ -150,6 +159,10 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                if (BuildConfig.DEBUG) {
+                    CountingIdlingResourceSingleton.increment();
+                }
                 mProgressBar.setVisibility(View.VISIBLE);
 
                 String path = "/protected/resource/products";
@@ -173,6 +186,10 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mProgressBar.setVisibility(View.VISIBLE);
 
+                if (BuildConfig.DEBUG) {
+                    CountingIdlingResourceSingleton.increment();
+                }
+
                 if (isChecked) {
                     MASUser.getCurrentUser().lockSession(getLockCallback());
                 } else {
@@ -189,7 +206,9 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+
                         onLogin();
+
                     }
                 });
             }
@@ -201,6 +220,9 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
                     public void run() {
                         mProgressBar.setVisibility(View.GONE);
                         Snackbar.make(mContainer,e.getMessage(),Snackbar.LENGTH_LONG).show();
+                        if (BuildConfig.DEBUG) {
+                            CountingIdlingResourceSingleton.decrement();
+                        }
                     }
                 });
             }
@@ -217,12 +239,18 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Void result) {
                 onLogout();
+                if (BuildConfig.DEBUG) {
+                    CountingIdlingResourceSingleton.decrement();
+                }
             }
 
             @Override
             public void onError(Throwable e) {
                 mProgressBar.setVisibility(View.GONE);
                 Snackbar.make(mContainer, e.toString(), Snackbar.LENGTH_LONG).show();
+                if (BuildConfig.DEBUG) {
+                    CountingIdlingResourceSingleton.decrement();
+                }
             }
         };
     }
@@ -237,6 +265,9 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
             @Override
             public void onSuccess(MASResponse<JSONObject> result) {
                 onInvoke(result);
+                if (BuildConfig.DEBUG) {
+                    CountingIdlingResourceSingleton.decrement();
+                }
             }
 
             @Override
@@ -244,6 +275,9 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
                 mProgressBar.setVisibility(View.GONE);
                 mProtectedContent.setText(R.string.invoke_session_locked);
                 Log.e(TAG, e.getMessage());
+                if (BuildConfig.DEBUG) {
+                    CountingIdlingResourceSingleton.decrement();
+                }
             }
         };
     }
@@ -255,11 +289,17 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Void result) {
                 onLock();
+                if (BuildConfig.DEBUG) {
+                    CountingIdlingResourceSingleton.decrement();
+                }
             }
 
             @Override
             public void onError(Throwable e) {
                 Snackbar.make(mContainer, e.toString(), Snackbar.LENGTH_LONG).show();
+                if (BuildConfig.DEBUG) {
+                    CountingIdlingResourceSingleton.decrement();
+                }
             }
         };
     }
@@ -276,12 +316,18 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Void result) {
                 onUnLock();
+                if (BuildConfig.DEBUG) {
+                    CountingIdlingResourceSingleton.decrement();
+                }
             }
 
             @Override
             public void onError(Throwable e) {
                 mProgressBar.setVisibility(View.GONE);
                 Snackbar.make(mContainer, e.toString(), Snackbar.LENGTH_LONG).show();
+                if (BuildConfig.DEBUG) {
+                    CountingIdlingResourceSingleton.decrement();
+                }
             }
         };
     }
@@ -299,6 +345,9 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
 
         String textToSet = "Logged in as " + MASUser.getCurrentUser().getUserName();
         mProtectedContent.setText(textToSet);
+        if (BuildConfig.DEBUG) {
+            CountingIdlingResourceSingleton.decrement();
+        }
     }
 
     private void onLogout() {
@@ -327,7 +376,7 @@ public class SessionUnlockSampleActivity extends AppCompatActivity {
                     objectString += "\n";
                 }
             }
-
+    Log.v("TAG", "objectString: "+objectString);
             mProtectedContent.setText(objectString);
         } catch (JSONException e) {
 
