@@ -35,15 +35,19 @@ import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
 
+/* This class is used to test Session Unlock */
 @RunWith(AndroidJUnit4.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SessionUnlockTest {
 
+    /* This method is called before the test, it will invoke/enable the runtime permissions, This also initiates Idling resource
+      object */
     @Before
     public void before() {
         IdlingRegistry.getInstance().register(CountingIdlingResourceSingleton.countingIdlingResource);
     }
 
+    /* This will launch the MainActivity */
     @Rule
     public ActivityScenarioRule<SessionUnlockSampleActivity> mActivityRule =
             new ActivityScenarioRule<>(SessionUnlockSampleActivity.class);
