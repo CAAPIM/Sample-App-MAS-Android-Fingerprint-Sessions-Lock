@@ -14,7 +14,9 @@
     <string name="invoke_session_locked">Session Locked, Cannot Invoke Protected API</string>
     <string name="session_locked">Session Locked!</string>
     <string name="session_unlocked">Session Unlocked!</string>
-
+    <string name="wrong_password">wrongpassword</string>
+    <string name="correct_user_name">admin</string>
+    <string name="password">7layer</string>
     <string name="acc_name">My Account</string>
     <string name="authenticator_label">CA</string>
 </resources>
